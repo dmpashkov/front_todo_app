@@ -16,12 +16,12 @@ window.onload = async () => {
 }
 
 const renderTask = async () => {
-  const resp = await fetch(url + 'allTasks', {
+  const resp = await fetch(`${url}allTasks`, {
     method: 'GET'
   });
   const result = await resp.json();
   tasks = result.data;
-  const tasksCopy = tasks.slice();
+  const tasksCopy = [ ...tasks ];
   tasksCopy.sort((a, b) => a.isCheck > b.isCheck ? 1 : -1);
   const taskrend = document.querySelector('.todo__tasks');
 
@@ -66,7 +66,7 @@ const addTask = async (event) => {
       text: value,
       isCheck: false
     })
-    const resp = await fetch(url + 'createTask', {
+    const resp = await fetch(`${url}createTask`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json;charset=utf-8',
@@ -86,7 +86,7 @@ const addTask = async (event) => {
 
 const onChangeCheckbox = async (event) => {
   const check = event.target.parentNode.classList.contains('todo__task_complete');
-  const resp = await fetch(url + 'updateTask', {
+  const resp = await fetch(`${url}updateTask`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json;charset=utf-8',
@@ -107,7 +107,7 @@ const editTask = async (event) => {
     const edit = prompt('Введите новый текст', '');
     if (edit) {
       event.text = edit;
-      const resp = await fetch(url + 'updateTask', {
+      const resp = await fetch(`${url}updateTask`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json;charset=utf-8',
