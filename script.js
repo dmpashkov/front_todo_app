@@ -1,21 +1,34 @@
-const input = document.querySelector('.todo__input');
-const button = document.querySelector('.todo-btn');
-const btnRem = document.querySelector('.todo-btn:last-child');
+const url = 'http://localhost:8000/';
 let tasks = [];
 
-renderTask = async () => {
-  const resp = await fetch('http://localhost:8000/allTasks', {
+window.onload = async () => {
+  if (document.querySelector('.todo__input')
+    && document.querySelector('.todo-btn')
+    && document.querySelector('.todo-btn:last-child')) {
+    document.querySelector('.todo__input').addEventListener("change", addTask);
+    document.querySelector('.todo-btn').addEventListener("click", addTask);
+    document.querySelector('.todo-btn:last-child').addEventListener("click", deleteAllTask);
+
+    renderTask();
+  } else {
+    return new Error('element is not defined');
+  }
+}
+
+const renderTask = async () => {
+  const resp = await fetch(url + 'allTasks', {
     method: 'GET'
   });
-  let result = await resp.json();
+  const result = await resp.json();
   tasks = result.data;
-  tasks.sort((a, b) => a.isCheck > b.isCheck ? 1 : -1);
+  const tasksCopy = tasks.slice();
+  tasksCopy.sort((a, b) => a.isCheck > b.isCheck ? 1 : -1);
   const taskrend = document.querySelector('.todo__tasks');
 
   while (taskrend.firstChild) {
     taskrend.removeChild(taskrend.firstChild)
   }
-  tasks.forEach(elem => {
+  tasksCopy.forEach(elem => {
     const task = document.createElement('div');
     task.id = `${elem._id}`;
     task.classList.add('todo__task');
@@ -45,90 +58,85 @@ renderTask = async () => {
   })
 }
 
-addTask = async (event) => {
+const addTask = async (event) => {
   let value = '';
   value = event.target.value;
-  tasks.unshift({
-    text: value,
-    isCheck: false
-  })
-  const resp = await fetch('http://localhost:8000/createTask', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json;charset=utf-8',
-    },
-    body: JSON.stringify({
+  if (value && value.trim() !== '') {
+    tasks.unshift({
       text: value,
       isCheck: false
     })
-  });
-  let result = await resp.json();
-  tasks = result.data;
-  value = "";
-  event.target.value = '';
-  renderTask();
+    const resp = await fetch(url + 'createTask', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json;charset=utf-8',
+      },
+      body: JSON.stringify({
+        text: value,
+        isCheck: false
+      })
+    });
+    const result = await resp.json();
+    tasks = result.data;
+    value = '';
+    event.target.value = '';
+    renderTask();
+  }
 }
 
-onChangeCheckbox = async (event) => {
+const onChangeCheckbox = async (event) => {
   const check = event.target.parentNode.classList.contains('todo__task_complete');
-  const resp = await fetch('http://localhost:8000/updateTask', {
+  const resp = await fetch(url + 'updateTask', {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json;charset=utf-8',
     },
     body: JSON.stringify({
-      "isCheck": !check,
-      "_id": event.target.parentNode.id
+      isCheck: !check,
+      _id: event.target.parentNode.id
     })
   });
-  let result = await resp.json();
+  const result = await resp.json();
   tasks = result.data;
   renderTask();
 }
 
-editTask = async (event) => {
+const editTask = async (event) => {
   const check = event.target.parentNode.classList.contains('todo__task_complete');
   if (!check) {
     const edit = prompt('Введите новый текст', '');
     if (edit) {
       event.text = edit;
-      const resp = await fetch('http://localhost:8000/updateTask', {
+      const resp = await fetch(url + 'updateTask', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json;charset=utf-8',
         },
         body: JSON.stringify({
-          "text": edit,
-          "_id": event.target.parentNode.id
+          text: edit,
+          _id: event.target.parentNode.id
         })
       });
-      let result = await resp.json();
+      const result = await resp.json();
       tasks = result.data;
       renderTask();
     }
   }
 }
 
-deleteTask = async (event) => {
+const deleteTask = async (event) => {
   const elemId = event.target.parentNode.id;
-  const resp = await fetch(`http://localhost:8000/deleteTask?_id=${elemId}`, {
+  const resp = await fetch(`${url}deleteTask?_id=${elemId}`, {
     method: 'DELETE'
   });
   await resp.json();
   renderTask();
 }
 
-deleteAllTask = async () => {
-  const resp = await fetch(`http://localhost:8000/deleteAllTask`, {
+const deleteAllTask = async () => {
+  const resp = await fetch(`${url}deleteAllTask`, {
     method: 'DELETE'
   });
-  let result = await resp.json();
-  tasks = [];
+  await resp.json();
   renderTask();
 }
-
-button.addEventListener("click", input.addTask);
-btnRem.addEventListener("click", deleteAllTask)
-input.addEventListener("change", addTask);
-
-renderTask();
