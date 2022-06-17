@@ -1,4 +1,4 @@
-const url = 'http://localhost:8000/';
+const url = 'http://localhost:8000';
 let tasks = [];
 
 window.onload = () => {
@@ -13,7 +13,7 @@ window.onload = () => {
 }
 
 const getAlltask = async () => {
-  const resp = await fetch(`${url}allTasks`, {
+  const resp = await fetch(`${url}/allTasks`, {
     method: 'GET'
   });
   result = await resp.json();
@@ -24,10 +24,10 @@ const getAlltask = async () => {
 const render = () => {
   const tasksCopy = [ ...tasks ];
   tasksCopy.sort((a, b) => a.isCheck > b.isCheck ? 1 : -1);
-  const taskrend = document.querySelector('.todo__tasks');
+  const renderArea = document.querySelector('.todo__tasks');
 
-  while (taskrend.firstChild) {
-    taskrend.removeChild(taskrend.firstChild)
+  while (renderArea.firstChild) {
+    renderArea.removeChild(renderArea.firstChild)
   }
   tasksCopy.forEach((elem, index) => {
     const task = document.createElement('div');
@@ -61,25 +61,25 @@ const render = () => {
 
     task.appendChild(editImg);
     task.appendChild(delImg);
-    taskrend.appendChild(task);
+    renderArea.appendChild(task);
   })
 }
 
 const addTask = async (event) => {
-  let value = '';
-  value = event.target.value;
-  if (value && value.trim() !== '') {
-    const resp = await fetch(`${url}createTask`, {
+  let inputText = '';
+  inputText = event.target.value;
+  if (inputText && inputText.trim() !== '') {
+    const resp = await fetch(`${url}/createTask`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json;charset=utf-8',
       },
       body: JSON.stringify({
-        text: value,
+        text: inputText,
         isCheck: false
       })
     });
-    value = '';
+    inputText = '';
     event.target.value = '';
     const result = await resp.json();
     tasks.push(result);
@@ -88,7 +88,7 @@ const addTask = async (event) => {
 }
 
 const onChangeCheckbox = async (elem) => {
-  const resp = await fetch(`${url}updateTask`, {
+  const resp = await fetch(`${url}/updateTask`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json;charset=utf-8',
@@ -110,7 +110,7 @@ const editTask = async (id, check) => {
   if (!check) {
     const edit = prompt('Введите новый текст', '');
     if (edit) {
-      const resp = await fetch(`${url}updateTask`, {
+      const resp = await fetch(`${url}/updateTask`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json;charset=utf-8',
@@ -131,7 +131,7 @@ const editTask = async (id, check) => {
 }
 
 const deleteTask = async (id) => {
-  const resp = await fetch(`${url}deleteTask?_id=${id}`, {
+  const resp = await fetch(`${url}/deleteTask?_id=${id}`, {
     method: 'DELETE'
   });
 
@@ -144,7 +144,7 @@ const deleteTask = async (id) => {
 }
 
 const deleteAllTask = async () => {
-  const resp = await fetch(`${url}deleteAllTask`, {
+  const resp = await fetch(`${url}/deleteAllTask`, {
     method: 'DELETE'
   });
   tasks = [];
