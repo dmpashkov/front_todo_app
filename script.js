@@ -1,26 +1,27 @@
 const url = 'http://localhost:8000/';
 let tasks = [];
 
-window.onload = async () => {
-  if (document.querySelector('.todo__input')
-    && document.querySelector('.todo-btn')
-    && document.querySelector('.todo-btn:last-child')) {
+window.onload = () => {
+  try { 
     document.querySelector('.todo__input').addEventListener("change", addTask);
     document.querySelector('.todo-btn').addEventListener("click", addTask);
     document.querySelector('.todo-btn:last-child').addEventListener("click", deleteAllTask);
-
-    renderTask();
-  } else {
-    return new Error('element is not defined');
+  } catch(e) {
+    return
   }
+  getAlltask();
 }
 
-const renderTask = async () => {
+const getAlltask = async () => {
   const resp = await fetch(`${url}allTasks`, {
     method: 'GET'
   });
-  const result = await resp.json();
+  result = await resp.json();
   tasks = result.data;
+  render();
+}
+
+const render = () => {
   const tasksCopy = [ ...tasks ];
   tasksCopy.sort((a, b) => a.isCheck > b.isCheck ? 1 : -1);
   const taskrend = document.querySelector('.todo__tasks');
@@ -28,7 +29,7 @@ const renderTask = async () => {
   while (taskrend.firstChild) {
     taskrend.removeChild(taskrend.firstChild)
   }
-  tasksCopy.forEach(elem => {
+  tasksCopy.forEach((elem, index) => {
     const task = document.createElement('div');
     task.id = `${elem._id}`;
     task.classList.add('todo__task');
@@ -45,15 +46,21 @@ const renderTask = async () => {
     task.appendChild(text)
 
     const editImg = document.createElement('img');
-    const deltImg = document.createElement('img');
+    const delImg = document.createElement('img');
     editImg.src = 'icons/edit-btn.png';
-    deltImg.src = 'icons/remove-btn.png';
-    editImg.addEventListener("click", editTask);
-    deltImg.addEventListener("click", deleteTask);
-    checkB.addEventListener("click", onChangeCheckbox);
+    delImg.src = 'icons/remove-btn.png';
+    editImg.onclick = () => {
+      editTask(elem._id, elem.isCheck);
+    }
+    delImg.onclick = () => {
+      deleteTask(elem._id);
+    }
+    checkB.onchange = () => {
+      onChangeCheckbox(elem);
+    }
 
     task.appendChild(editImg);
-    task.appendChild(deltImg);
+    task.appendChild(delImg);
     taskrend.appendChild(task);
   })
 }
@@ -62,10 +69,6 @@ const addTask = async (event) => {
   let value = '';
   value = event.target.value;
   if (value && value.trim() !== '') {
-    tasks.unshift({
-      text: value,
-      isCheck: false
-    })
     const resp = await fetch(`${url}createTask`, {
       method: 'POST',
       headers: {
@@ -76,37 +79,37 @@ const addTask = async (event) => {
         isCheck: false
       })
     });
-    const result = await resp.json();
-    tasks = result.data;
     value = '';
     event.target.value = '';
-    renderTask();
+    const result = await resp.json();
+    tasks.push(result);
+    render();
   }
 }
 
-const onChangeCheckbox = async (event) => {
-  const check = event.target.parentNode.classList.contains('todo__task_complete');
+const onChangeCheckbox = async (elem) => {
   const resp = await fetch(`${url}updateTask`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json;charset=utf-8',
     },
     body: JSON.stringify({
-      isCheck: !check,
-      _id: event.target.parentNode.id
+      isCheck: !elem.isCheck,
+      _id: elem._id
     })
   });
-  const result = await resp.json();
-  tasks = result.data;
-  renderTask();
+  tasks.forEach((element, index) => {
+    if (element._id === elem._id) {
+      tasks[index].isCheck = !elem.isCheck;
+    }
+  })
+  render();
 }
 
-const editTask = async (event) => {
-  const check = event.target.parentNode.classList.contains('todo__task_complete');
+const editTask = async (id, check) => {
   if (!check) {
     const edit = prompt('Введите новый текст', '');
     if (edit) {
-      event.text = edit;
       const resp = await fetch(`${url}updateTask`, {
         method: 'PATCH',
         headers: {
@@ -114,29 +117,36 @@ const editTask = async (event) => {
         },
         body: JSON.stringify({
           text: edit,
-          _id: event.target.parentNode.id
+          _id: id
         })
       });
-      const result = await resp.json();
-      tasks = result.data;
-      renderTask();
+      tasks.forEach((element, index) => {
+        if (element._id === id) {
+          tasks[index].text = edit;
+        }
+      })
+      render();
     }
   }
 }
 
-const deleteTask = async (event) => {
-  const elemId = event.target.parentNode.id;
-  const resp = await fetch(`${url}deleteTask?_id=${elemId}`, {
+const deleteTask = async (id) => {
+  const resp = await fetch(`${url}deleteTask?_id=${id}`, {
     method: 'DELETE'
   });
-  await resp.json();
-  renderTask();
+
+  tasks.forEach((element, index) => {
+    if (element._id === id) {
+      tasks.splice(index, 1);
+    }
+  })
+  render();
 }
 
 const deleteAllTask = async () => {
   const resp = await fetch(`${url}deleteAllTask`, {
     method: 'DELETE'
   });
-  await resp.json();
-  renderTask();
+  tasks = [];
+  render();
 }
