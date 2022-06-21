@@ -80,6 +80,10 @@ input[type="checkbox"] {
   padding: 0 1rem;
 }
 
+.todo__input[type=text]:focus {
+  outline: none;
+}
+
 .todo__task {
   width: 100%;
   display: flex;
@@ -91,8 +95,8 @@ input[type="checkbox"] {
 .todo__task>div {
   margin: 0.3rem auto;
 }
-
-.todo__task img {
+.todo__task .edit-btn, .todo__task .del-btn {
+  border: none;
   border-radius: 50%;
   margin: 0 1rem;
   cursor: pointer;
@@ -100,8 +104,32 @@ input[type="checkbox"] {
   height: 1.5rem;
 }
 
+.todo__task img {
+  border-radius: 50%;
+  width: 100%;
+  height: 100%;
+}
+
 .todo__task img:hover {
   box-shadow: 0.5rem 0.5rem 0.6rem rgb(33 33 33 / 50%);
+}
+
+.todo__task.edit {
+  position: relative;
+}
+
+.todo__task input[type=text] {
+  top: 50%;
+  left: 42%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  position: absolute;
+  box-shadow: 0.5rem 0.5rem 0.6rem rgb(33 33 33 / 50%);
+  height: 2rem;
+  min-width: 24rem;
+  border: none;
+  outline: none;
+  border-radius: 0.3rem;
 }
 
 .todo__task_complete {
