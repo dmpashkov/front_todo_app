@@ -1,22 +1,31 @@
 const url = 'http://localhost:8000';
-const headerValue = 'application/json;charset=utf-8'
+const headers = {
+  'Content-Type': 'application/json;charset=utf-8'
+}
 let tasks = [];
 
 window.onload = () => {
   try {
-    document.querySelector('.todo-btn:last-child').addEventListener("click", deleteAllTask);
-    const input = document.querySelector('.todo__input');
-    input.onchange = () => {
-      addTask(input);
-    }
+    if (document.querySelector('.todo-btn:last-child')
+      && document.querySelector('.todo__input')
+      && document.querySelector('.todo-btn')) {
 
-    const inputBtn = document.querySelector('.todo-btn');
-    inputBtn.onclick = () => {
-      addTask(input);
+      document.querySelector('.todo-btn:last-child').addEventListener("click", deleteAllTask);
+      const input = document.querySelector('.todo__input');
+      input.onchange = () => {
+        addTask(input);
+      }
+
+      const inputBtn = document.querySelector('.todo-btn');
+      inputBtn.onclick = () => {
+        addTask(input);
+      }
+    } else {
+      throw new Error();
     }
 
   } catch (err) {
-    console.error(err);
+    throw err
   }
   getAllTask();
 }
@@ -30,118 +39,123 @@ const getAllTask = async () => {
     tasks = result.data;
     render();
   } catch (err) {
-    console.error(err);
+    throw err;
   }
 }
 
 const render = () => {
   try {
     const tasksCopy = [...tasks];
-    if (document.querySelector('.todo__tasks')) {
-      const tasksHTML = document.querySelector('.todo__tasks');
-      while (tasksHTML.firstChild) {
-        tasksHTML.removeChild(tasksHTML.firstChild)
-      }
-      tasksCopy.forEach((elem, index) => {
-        const task = document.createElement('div');
-        task.id = `${elem._id}`;
-        task.classList.add('todo__task');
-        const checkBox = document.createElement("input");
-        checkBox.type = "checkbox";
-        if (elem.isCheck) {
-          task.classList.add("todo__task_complete");
-        } else {
-          task.classList.remove("todo__task_complete");
-        }
-        const text = document.createElement('div');
-        text.innerText = elem.text;
-        task.appendChild(checkBox);
-        task.appendChild(text);
-
-        const editBtn = document.createElement('button');
-        const editImg = document.createElement('img');
-        editImg.src = 'icons/edit-btn.png';
-        editBtn.appendChild(editImg);
-        editBtn.classList.add('edit-btn');
-
-        const delBtn = document.createElement('button');
-        const delImg = document.createElement('img');
-        delImg.src = 'icons/remove-btn.png';
-        delBtn.appendChild(delImg);
-        delBtn.classList.add('del-btn');
-
-        editBtn.onclick = () => {
-          if (!elem.isCheck) {
-            if (!task.classList.contains('edit')) {
-              task.classList.add('edit');
-              const edit = document.createElement("input");
-              edit.type = "text";
-              edit.value = elem.text;
-              edit.onchange = () => {
-                const text = task.lastChild.value;
-                editTask(elem._id, elem.isCheck, text);
-              }
-              task.appendChild(edit);
-              edit.focus();
-            } else {
-              const text = task.lastChild.value;
-              task.classList.remove('edit');
-              task.removeChild(task.lastChild);
-              if (elem.text != text) {
-                editTask(elem._id, elem.isCheck, text);
-              }
-            }
-          }
-        }
-        delBtn.onclick = () => {
-          deleteTask(elem._id);
-        }
-        checkBox.onchange = () => {
-          onChangeCheckbox(elem.isCheck, elem._id);
-        }
-
-        task.appendChild(editBtn);
-        task.appendChild(delBtn);
-
-        const theFirstChild = tasksHTML.firstChild;
-
-        if (elem.isCheck) {
-          tasksHTML.appendChild(task);
-        } else {
-          tasksHTML.insertBefore(task, theFirstChild)
-        }
-      })
-    } else {
-      return console.error('error')
+    if (!document.querySelector('.todo__tasks')) {
+      throw new Error();
     }
-  } catch {
-    console.error(err);
+    const tasksDiv = document.querySelector('.todo__tasks');
+    while (tasksDiv.firstChild) {
+      tasksDiv.removeChild(tasksDiv.firstChild)
+    }
+    tasksCopy.forEach(elem => {
+      const { _id, text, isCheck } = elem;
+      const task = document.createElement('div');
+      task.id = `${_id}`;
+      task.classList.add('todo__task');
+      const checkBox = document.createElement("input");
+      checkBox.type = "checkbox";
+      if (isCheck) {
+        task.classList.add("todo__task_complete");
+      } else {
+        task.classList.remove("todo__task_complete");
+      }
+      const taskText = document.createElement('div');
+      taskText.innerText = text;
+      task.appendChild(checkBox);
+      task.appendChild(taskText);
+
+      const editButton = document.createElement('button');
+      const editIcon = document.createElement('img');
+      editIcon.src = 'icons/edit-btn.png';
+      editButton.appendChild(editIcon);
+      editButton.classList.add('edit-btn');
+
+      const deleteButton = document.createElement('button');
+      const deleteIcon = document.createElement('img');
+      deleteIcon.src = 'icons/remove-btn.png';
+      deleteButton.appendChild(deleteIcon);
+      deleteButton.classList.add('del-btn');
+
+      isCheck
+        ? editButton.style.visibility = "hidden"
+        : editButton.style.visibility = "visible";
+
+      editButton.onclick = () => {
+        creatEditInput(_id, text);
+      }
+
+      deleteButton.onclick = () => {
+        deleteTask(_id);
+      }
+
+      checkBox.onchange = () => {
+        onChangeCheckbox(isCheck, _id);
+      }
+
+      task.appendChild(editButton);
+      task.appendChild(deleteButton);
+
+      const theFirstChild = tasksDiv.firstChild;
+
+      isCheck
+        ? tasksDiv.appendChild(task)
+        : tasksDiv.insertBefore(task, theFirstChild)
+    })
+  } catch (err) {
+    throw err;
+  }
+}
+
+const creatEditInput = async (_id, text) => {
+  const task = document.getElementById(`${_id}`);
+  if (!task.classList.contains('edit')) {
+    task.classList.add('edit');
+    const edit = document.createElement("input");
+    edit.type = "text";
+    edit.value = text;
+    edit.onchange = () => {
+      text = task.lastChild.value;
+      editTask(_id, text);
+    }
+    task.appendChild(edit);
+    edit.focus();
+  } else {
+    task.classList.remove('edit');
+    text = task.lastChild.value;
+    task.removeChild(task.lastChild);
+    if (text != text) {
+      editTask(_id, text);
+    }
   }
 }
 
 const addTask = async (input) => {
   try {
-    let inputText = '';
-    inputText = input.value;
-    if (inputText && inputText.trim() !== '') {
-      const resp = await fetch(`${url}/createTask`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': headerValue
-        },
-        body: JSON.stringify({
-          text: inputText,
-          isCheck: false
-        })
-      });
-      inputText = '';
-      input.value = '';
-      const result = await resp.json();
-      tasks.push(result);
-      render();
+    let inputText = input.value;
+    if (inputText.trim() === '') {
+      throw new Error()
     }
+    const resp = await fetch(`${url}/createTask`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        text: inputText,
+        isCheck: false
+      })
+    });
+    const result = await resp.json();
+    tasks.push(result);
+    input.value = '';
+    render();
   } catch (err) {
-    console.error(err);
+    input.value = '';
+    throw err;
   }
 }
 
@@ -149,51 +163,45 @@ const onChangeCheckbox = async (check, _id) => {
   try {
     const resp = await fetch(`${url}/completeTask`, {
       method: 'PATCH',
-      headers: {
-        'Content-Type': headerValue
-      },
+      headers,
       body: JSON.stringify({
         isCheck: !check,
         _id
       })
     });
-    const [task] = await resp.json();
-    tasks.forEach((element, index) => {
-      if (element._id === _id) {
-        tasks[index].isCheck = task.isCheck;
+    const result = await resp.json();
+    tasks.forEach(element => {
+      if (element._id === result._id) {
+        element.isCheck = !result.isCheck;
       }
     })
     render();
-  } catch {
-    console.error(err);
+  } catch (err) {
+    throw err;
   }
 }
 
-const editTask = async (id, check, text) => {
+const editTask = async (id, text) => {
   try {
-    if (!check) {
-      const edit = text;
-      if (edit) {
-        const resp = await fetch(`${url}/updateTask`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': headerValue
-          },
-          body: JSON.stringify({
-            text: edit,
-            _id: id
-          })
-        });
-        tasks.forEach((element, index) => {
-          if (element._id === id) {
-            tasks[index].text = edit;
-          }
+    const edit = text;
+    if (edit) {
+      const resp = await fetch(`${url}/updateTask`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({
+          text: edit,
+          _id: id
         })
-        render();
-      }
+      });
+      tasks.forEach(element => {
+        if (element._id === id) {
+          element.text = edit;
+        }
+      })
+      render();
     }
   } catch (err) {
-    console.error(err);
+    throw err;
   }
 }
 
@@ -204,14 +212,12 @@ const deleteTask = async (id) => {
     });
     const result = await resp.json();
 
-    if (result.deletedCount === 1) {
-      tasks = tasks.filter((task) => {
-        return task._id !== id
-      })
+    if (result.deletedCount) {
+      tasks = tasks.filter((task) => task._id !== id)
     }
     render();
   } catch (err) {
-    console.error(err);
+    throw err;
   }
 }
 
@@ -223,6 +229,6 @@ const deleteAllTask = async () => {
     tasks = [];
     render();
   } catch (err) {
-    console.error(err);
+    throw err;
   }
 }
