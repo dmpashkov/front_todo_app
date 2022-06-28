@@ -6,23 +6,19 @@ let tasks = [];
 
 window.onload = () => {
   try {
-    if (document.querySelector('.todo-btn:last-child')
-      && document.querySelector('.todo__input')
-      && document.querySelector('.todo-btn')) {
+    const buttonDelete = document.querySelector('.todo-btn:last-child');
+    const input = document.querySelector('.todo__input');
+    const inputButton = document.querySelector('.todo-btn');
 
-      document.querySelector('.todo-btn:last-child').addEventListener("click", deleteAllTask);
-      const input = document.querySelector('.todo__input');
-      input.onchange = () => {
-        addTask(input);
-      }
-
-      const inputBtn = document.querySelector('.todo-btn');
-      inputBtn.onclick = () => {
-        addTask(input);
-      }
-    } else {
-      throw new Error();
+    if (buttonDelete === null
+      || input === null
+      || inputButton === null) {
+      return;
     }
+
+    buttonDelete.onclick = () => deleteAllTask();
+    input.onchange = () => addTask(input);
+    inputButton.onclick = () => addTask(input);
 
   } catch (err) {
     throw err
@@ -44,94 +40,85 @@ const getAllTask = async () => {
 }
 
 const render = () => {
-  try {
-    const tasksCopy = [...tasks];
-    if (!document.querySelector('.todo__tasks')) {
-      throw new Error();
-    }
-    const tasksDiv = document.querySelector('.todo__tasks');
-    while (tasksDiv.firstChild) {
-      tasksDiv.removeChild(tasksDiv.firstChild)
-    }
-    tasksCopy.forEach(elem => {
-      const { _id, text, isCheck } = elem;
-      const task = document.createElement('div');
-      task.id = `${_id}`;
-      task.classList.add('todo__task');
-      const checkBox = document.createElement("input");
-      checkBox.type = "checkbox";
-      if (isCheck) {
-        task.classList.add("todo__task_complete");
-      } else {
-        task.classList.remove("todo__task_complete");
-      }
-      const taskText = document.createElement('div');
-      taskText.innerText = text;
-      task.appendChild(checkBox);
-      task.appendChild(taskText);
-
-      const editButton = document.createElement('button');
-      const editIcon = document.createElement('img');
-      editIcon.src = 'icons/edit-btn.png';
-      editButton.appendChild(editIcon);
-      editButton.classList.add('edit-btn');
-
-      const deleteButton = document.createElement('button');
-      const deleteIcon = document.createElement('img');
-      deleteIcon.src = 'icons/remove-btn.png';
-      deleteButton.appendChild(deleteIcon);
-      deleteButton.classList.add('del-btn');
-
-      isCheck
-        ? editButton.style.visibility = "hidden"
-        : editButton.style.visibility = "visible";
-
-      editButton.onclick = () => {
-        creatEditInput(_id, text);
-      }
-
-      deleteButton.onclick = () => {
-        deleteTask(_id);
-      }
-
-      checkBox.onchange = () => {
-        onChangeCheckbox(isCheck, _id);
-      }
-
-      task.appendChild(editButton);
-      task.appendChild(deleteButton);
-
-      const theFirstChild = tasksDiv.firstChild;
-
-      isCheck
-        ? tasksDiv.appendChild(task)
-        : tasksDiv.insertBefore(task, theFirstChild)
-    })
-  } catch (err) {
-    throw err;
+  const tasksCopy = [...tasks];
+  if (document.querySelector('.todo__tasks') === null) {
+    return;
   }
+  const todoTasks = document.querySelector('.todo__tasks');
+  while (todoTasks.firstChild) {
+    todoTasks.removeChild(todoTasks.firstChild)
+  }
+  tasksCopy.forEach(elem => {
+    const { _id, text, isCheck } = elem;
+    const task = document.createElement('div');
+    task.id = `task-${_id}`;
+    task.classList.add('todo__task');
+    const checkBox = document.createElement("input");
+    checkBox.type = "checkbox";
+
+    isCheck
+      ? task.classList.add("todo__task_complete")
+      : task.classList.remove("todo__task_complete");
+
+    const taskText = document.createElement('div');
+    taskText.innerText = text;
+    task.appendChild(checkBox);
+    task.appendChild(taskText);
+
+    const editButton = document.createElement('button');
+    const editIcon = document.createElement('img');
+    editIcon.src = 'icons/edit-btn.png';
+    editButton.appendChild(editIcon);
+    editButton.classList.add('edit-btn');
+
+    const deleteButton = document.createElement('button');
+    const deleteIcon = document.createElement('img');
+    deleteIcon.src = 'icons/remove-btn.png';
+    deleteButton.appendChild(deleteIcon);
+    deleteButton.classList.add('delete-button');
+
+    editButton.onclick = () => {
+      creatEditInput(_id, text);
+    }
+
+    deleteButton.onclick = () => {
+      deleteTask(_id);
+    }
+
+    checkBox.onchange = () => {
+      onChangeCheckbox(isCheck, _id);
+    }
+
+    isCheck
+      ? null
+      : task.appendChild(editButton);
+
+    task.appendChild(deleteButton);
+
+    const theFirstChild = todoTasks.firstChild;
+
+    isCheck
+      ? todoTasks.appendChild(task)
+      : todoTasks.insertBefore(task, theFirstChild);
+  })
 }
 
-const creatEditInput = async (_id, text) => {
-  const task = document.getElementById(`${_id}`);
+const creatEditInput = (_id, text) => {
+  const task = document.getElementById(`task-${_id}`);
   if (!task.classList.contains('edit')) {
     task.classList.add('edit');
     const edit = document.createElement("input");
     edit.type = "text";
     edit.value = text;
     edit.onchange = () => {
-      text = task.lastChild.value;
-      editTask(_id, text);
+      editTask(_id, task.lastChild.value);
     }
     task.appendChild(edit);
     edit.focus();
   } else {
     task.classList.remove('edit');
-    text = task.lastChild.value;
     task.removeChild(task.lastChild);
-    if (text != text) {
-      editTask(_id, text);
-    }
+    editTask(_id, task.lastChild.value);
   }
 }
 
@@ -139,7 +126,8 @@ const addTask = async (input) => {
   try {
     let inputText = input.value;
     if (inputText.trim() === '') {
-      throw new Error()
+      input.value = '';
+      return;
     }
     const resp = await fetch(`${url}/createTask`, {
       method: 'POST',
@@ -154,7 +142,6 @@ const addTask = async (input) => {
     input.value = '';
     render();
   } catch (err) {
-    input.value = '';
     throw err;
   }
 }
@@ -183,19 +170,18 @@ const onChangeCheckbox = async (check, _id) => {
 
 const editTask = async (id, text) => {
   try {
-    const edit = text;
-    if (edit) {
+    if (text) {
       const resp = await fetch(`${url}/updateTask`, {
         method: 'PATCH',
         headers,
         body: JSON.stringify({
-          text: edit,
+          text,
           _id: id
         })
       });
       tasks.forEach(element => {
         if (element._id === id) {
-          element.text = edit;
+          element.text = text;
         }
       })
       render();
@@ -211,8 +197,7 @@ const deleteTask = async (id) => {
       method: 'DELETE'
     });
     const result = await resp.json();
-
-    if (result.deletedCount) {
+    if (result.deletedCount === 1) {
       tasks = tasks.filter((task) => task._id !== id)
     }
     render();
