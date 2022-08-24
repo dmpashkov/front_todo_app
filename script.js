@@ -15,26 +15,24 @@ window.onload = () => {
       || inputButton === null) {
       return;
     }
-
-    buttonDelete.onclick = () => deleteAllTask();
-    input.onchange = () => addTask(input);
-    inputButton.onclick = () => addTask(input);
-
+    
   } catch (err) {
+    getError(err);
     throw err
   }
-  getAllTask();
+  getAllTasks();
 }
 
-const getAllTask = async () => {
+const getAllTasks = async () => {
   try {
-    const resp = await fetch(`${url}/allTasks`, {
+    const resp = await fetch(`${url}/tasks`, {
       method: 'GET'
     });
     const result = await resp.json();
     tasks = result.data;
     render();
   } catch (err) {
+    getError(err);
     throw err;
   }
 }
@@ -122,14 +120,22 @@ const creatEditInput = (_id, text) => {
   }
 }
 
-const addTask = async (input) => {
+const getError = (error) => {
+  const showError = document.querySelector('.error');
+  showError.innerHTML = error;
+  showError.style.display = 'block'
+  setTimeout(() => showError.style.display = 'none', 2000);
+}
+
+const addTask = async () => {
   try {
+    const input = document.querySelector('.todo__input');
     let inputText = input.value;
-    if (inputText.trim() === '') {
+    if (inputText.trim() === '' || event === undefined) {
       input.value = '';
       return;
     }
-    const resp = await fetch(`${url}/createTask`, {
+    const resp = await fetch(`${url}/new`, {
       method: 'POST',
       headers,
       body: JSON.stringify({
@@ -142,13 +148,14 @@ const addTask = async (input) => {
     input.value = '';
     render();
   } catch (err) {
+    getError(err);
     throw err;
   }
 }
 
 const onChangeCheckbox = async (check, _id) => {
   try {
-    const resp = await fetch(`${url}/completeTask`, {
+    const resp = await fetch(`${url}/complete/${_id}`, {
       method: 'PATCH',
       headers,
       body: JSON.stringify({
@@ -159,11 +166,12 @@ const onChangeCheckbox = async (check, _id) => {
     const result = await resp.json();
     tasks.forEach(element => {
       if (element._id === result._id) {
-        element.isCheck = !result.isCheck;
+        element.isCheck = !element.isCheck;
       }
     })
     render();
   } catch (err) {
+    getError(err);
     throw err;
   }
 }
@@ -171,7 +179,7 @@ const onChangeCheckbox = async (check, _id) => {
 const editTask = async (id, text) => {
   try {
     if (text) {
-      const resp = await fetch(`${url}/updateTask`, {
+      const resp = await fetch(`${url}/update/${id}`, {
         method: 'PATCH',
         headers,
         body: JSON.stringify({
@@ -187,13 +195,14 @@ const editTask = async (id, text) => {
       render();
     }
   } catch (err) {
+    getError(err);
     throw err;
   }
 }
 
 const deleteTask = async (id) => {
   try {
-    const resp = await fetch(`${url}/deleteTask?_id=${id}`, {
+    const resp = await fetch(`${url}/delete/${id}`, {
       method: 'DELETE'
     });
     const result = await resp.json();
@@ -202,18 +211,20 @@ const deleteTask = async (id) => {
     }
     render();
   } catch (err) {
+    getError(err);
     throw err;
   }
 }
 
 const deleteAllTask = async () => {
   try {
-    const resp = await fetch(`${url}/deleteAllTask`, {
+    const resp = await fetch(`${url}/deleteall`, {
       method: 'DELETE'
     });
     tasks = [];
     render();
   } catch (err) {
+    getError(err);
     throw err;
   }
 }

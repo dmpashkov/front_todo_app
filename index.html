@@ -16,11 +16,12 @@
             <h2 class="todo__title">Todo app</h2>
             <input type="text" class="todo__input" placeholder="Введите задачу">
             <div class="todo-btn__wrapper">
-              <button class="todo-btn">Добавить</button>
-              <button class="todo-btn todo-btn_del">Очистить</button>
+              <button onclick="addTask()" class="todo-btn">Добавить</button>
+              <button onclick="deleteAllTask()" class="todo-btn todo-btn_del">Очистить</button>
             </div>
           </div>
           <div class="todo__tasks"></div>
+          <p class="error"></p>
         </div>
       </div>
     </section>
