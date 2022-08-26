@@ -6,16 +6,11 @@ let tasks = [];
 
 window.onload = () => {
   try {
-    const buttonDelete = document.querySelector('.todo-btn:last-child');
-    const input = document.querySelector('.todo__input');
-    const inputButton = document.querySelector('.todo-btn');
-
-    if (buttonDelete === null
-      || input === null
-      || inputButton === null) {
-      return;
+    if (document.querySelector('.todo-btn:last-child') === null
+      || document.querySelector('.todo__input') === null
+      || document.querySelector('.todo-btn') === null) {
+      throw new Error;
     }
-    
   } catch (err) {
     getError(err);
     throw err
@@ -39,38 +34,38 @@ const getAllTasks = async () => {
 
 const render = () => {
   const tasksCopy = [...tasks];
-  if (document.querySelector('.todo__tasks') === null) {
-    return;
-  }
   const todoTasks = document.querySelector('.todo__tasks');
+  if (todoTasks === null) {
+    throw new Error;
+  }
   while (todoTasks.firstChild) {
     todoTasks.removeChild(todoTasks.firstChild)
   }
   tasksCopy.forEach(elem => {
     const { _id, text, isCheck } = elem;
+
     const task = document.createElement('div');
     task.id = `task-${_id}`;
     task.classList.add('todo__task');
+
     const checkBox = document.createElement("input");
     checkBox.type = "checkbox";
-
-    isCheck
-      ? task.classList.add("todo__task_complete")
-      : task.classList.remove("todo__task_complete");
+    task.appendChild(checkBox);
 
     const taskText = document.createElement('div');
     taskText.innerText = text;
-    task.appendChild(checkBox);
     task.appendChild(taskText);
 
     const editButton = document.createElement('button');
     const editIcon = document.createElement('img');
+    editIcon.alt = "edit_icon";
     editIcon.src = 'icons/edit-btn.png';
     editButton.appendChild(editIcon);
     editButton.classList.add('edit-btn');
 
     const deleteButton = document.createElement('button');
     const deleteIcon = document.createElement('img');
+    deleteIcon.alt = "remove_icon";
     deleteIcon.src = 'icons/remove-btn.png';
     deleteButton.appendChild(deleteIcon);
     deleteButton.classList.add('delete-button');
@@ -87,41 +82,48 @@ const render = () => {
       onChangeCheckbox(isCheck, _id);
     }
 
-    isCheck
-      ? null
-      : task.appendChild(editButton);
-
-    task.appendChild(deleteButton);
-
     const theFirstChild = todoTasks.firstChild;
 
-    isCheck
-      ? todoTasks.appendChild(task)
-      : todoTasks.insertBefore(task, theFirstChild);
+    if (isCheck) {
+      task.classList.add("todo__task_complete");
+      todoTasks.appendChild(task);
+    } else {
+      task.classList.remove("todo__task_complete");
+      task.appendChild(editButton);
+      todoTasks.insertBefore(task, theFirstChild);
+    }
+    task.appendChild(deleteButton);
   })
 }
 
 const creatEditInput = (_id, text) => {
   const task = document.getElementById(`task-${_id}`);
+  if (task === null) {
+    throw new Error;
+  }
   if (!task.classList.contains('edit')) {
     task.classList.add('edit');
     const edit = document.createElement("input");
     edit.type = "text";
     edit.value = text;
+
     edit.onchange = () => {
-      editTask(_id, task.lastChild.value);
+      text = task.lastChild.value;
+      editTask(_id, text);
     }
     task.appendChild(edit);
     edit.focus();
   } else {
     task.classList.remove('edit');
     task.removeChild(task.lastChild);
-    editTask(_id, task.lastChild.value);
   }
 }
 
 const getError = (error) => {
   const showError = document.querySelector('.error');
+  if (showError === null) {
+    throw new Error;
+  }
   showError.innerHTML = error;
   showError.style.display = 'block'
   setTimeout(() => showError.style.display = 'none', 2000);
@@ -131,16 +133,15 @@ const addTask = async () => {
   try {
     const input = document.querySelector('.todo__input');
     let inputText = input.value;
-    if (inputText.trim() === '' || event === undefined) {
+    if (inputText.trim() === '') {
       input.value = '';
-      return;
+      throw new Error;
     }
-    const resp = await fetch(`${url}/new`, {
+    const resp = await fetch(`${url}/tasks/new`, {
       method: 'POST',
-      headers,
+      headers: headers,
       body: JSON.stringify({
-        text: inputText,
-        isCheck: false
+        text: inputText
       })
     });
     const result = await resp.json();
@@ -155,9 +156,9 @@ const addTask = async () => {
 
 const onChangeCheckbox = async (check, _id) => {
   try {
-    const resp = await fetch(`${url}/complete/${_id}`, {
+    const resp = await fetch(`${url}/tasks/${_id}/complete`, {
       method: 'PATCH',
-      headers,
+      headers: headers,
       body: JSON.stringify({
         isCheck: !check,
         _id
@@ -179,9 +180,9 @@ const onChangeCheckbox = async (check, _id) => {
 const editTask = async (id, text) => {
   try {
     if (text) {
-      const resp = await fetch(`${url}/update/${id}`, {
+      const resp = await fetch(`${url}/tasks/${id}/update`, {
         method: 'PATCH',
-        headers,
+        headers: headers,
         body: JSON.stringify({
           text,
           _id: id
@@ -202,7 +203,7 @@ const editTask = async (id, text) => {
 
 const deleteTask = async (id) => {
   try {
-    const resp = await fetch(`${url}/delete/${id}`, {
+    const resp = await fetch(`${url}/tasks/${id}/delete`, {
       method: 'DELETE'
     });
     const result = await resp.json();
@@ -218,7 +219,7 @@ const deleteTask = async (id) => {
 
 const deleteAllTask = async () => {
   try {
-    const resp = await fetch(`${url}/deleteall`, {
+    const resp = await fetch(`${url}/tasks/deleteall`, {
       method: 'DELETE'
     });
     tasks = [];
