@@ -139,7 +139,7 @@ const addTask = async () => {
     }
     const resp = await fetch(`${url}/tasks/new`, {
       method: 'POST',
-      headers: headers,
+      headers,
       body: JSON.stringify({
         text: inputText
       })
@@ -158,7 +158,7 @@ const onChangeCheckbox = async (check, _id) => {
   try {
     const resp = await fetch(`${url}/tasks/${_id}/complete`, {
       method: 'PATCH',
-      headers: headers,
+      headers,
       body: JSON.stringify({
         isCheck: !check,
         _id
@@ -182,15 +182,16 @@ const editTask = async (id, text) => {
     if (text) {
       const resp = await fetch(`${url}/tasks/${id}/update`, {
         method: 'PATCH',
-        headers: headers,
+        headers,
         body: JSON.stringify({
           text,
           _id: id
         })
       });
+      const result = await resp.json();
       tasks.forEach(element => {
         if (element._id === id) {
-          element.text = text;
+          element.text = result.text;
         }
       })
       render();
