@@ -6,13 +6,8 @@ let tasks = [];
 
 window.onload = () => {
   try {
-    if (document.querySelector('.todo-btn:last-child') === null
-      || document.querySelector('.todo__input') === null
-      || document.querySelector('.todo-btn') === null) {
-      throw new Error;
-    }
   } catch (err) {
-    getError(err);
+    getError('app load error');
     throw err
   }
   getAllTasks();
@@ -27,7 +22,7 @@ const getAllTasks = async () => {
     tasks = result.data;
     render();
   } catch (err) {
-    getError(err);
+    getError("Cannot connect to the server.");
     throw err;
   }
 }
@@ -36,7 +31,7 @@ const render = () => {
   const tasksCopy = [...tasks];
   const todoTasks = document.querySelector('.todo__tasks');
   if (todoTasks === null) {
-    throw new Error;
+    return;
   }
   while (todoTasks.firstChild) {
     todoTasks.removeChild(todoTasks.firstChild)
@@ -58,14 +53,14 @@ const render = () => {
 
     const editButton = document.createElement('button');
     const editIcon = document.createElement('img');
-    editIcon.alt = "edit_icon";
+    editIcon.alt = "edit";
     editIcon.src = 'icons/edit-btn.png';
     editButton.appendChild(editIcon);
     editButton.classList.add('edit-btn');
 
     const deleteButton = document.createElement('button');
     const deleteIcon = document.createElement('img');
-    deleteIcon.alt = "remove_icon";
+    deleteIcon.alt = "remove";
     deleteIcon.src = 'icons/remove-btn.png';
     deleteButton.appendChild(deleteIcon);
     deleteButton.classList.add('delete-button');
@@ -98,22 +93,28 @@ const render = () => {
 
 const creatEditInput = (_id, text) => {
   const task = document.getElementById(`task-${_id}`);
-  if (task === null) {
-    throw new Error;
+  const editBtn = task.lastChild.previousSibling;
+  const editIcon = task.lastChild.previousSibling.lastChild;
+  if (task === null
+    || editBtn == null
+    || editIcon == null) {
+    return;
   }
   if (!task.classList.contains('edit')) {
     task.classList.add('edit');
     const edit = document.createElement("input");
     edit.type = "text";
     edit.value = text;
+    editIcon.src = "icons/done.png";
 
-    edit.onchange = () => {
+    editBtn.onclick = () => {
       text = task.lastChild.value;
       editTask(_id, text);
     }
     task.appendChild(edit);
     edit.focus();
   } else {
+    editIcon.src = "icons/edit-btn.png";
     task.classList.remove('edit');
     task.removeChild(task.lastChild);
   }
@@ -122,7 +123,7 @@ const creatEditInput = (_id, text) => {
 const getError = (error) => {
   const showError = document.querySelector('.error');
   if (showError === null) {
-    throw new Error;
+    return;
   }
   showError.innerHTML = error;
   showError.style.display = 'block'
@@ -135,9 +136,9 @@ const addTask = async () => {
     let inputText = input.value;
     if (inputText.trim() === '') {
       input.value = '';
-      throw new Error;
+      return;
     }
-    const resp = await fetch(`${url}/tasks/new`, {
+    const resp = await fetch(`${url}/tasks`, {
       method: 'POST',
       headers,
       body: JSON.stringify({
@@ -149,7 +150,7 @@ const addTask = async () => {
     input.value = '';
     render();
   } catch (err) {
-    getError(err);
+    getError('something went wrong');
     throw err;
   }
 }
@@ -160,19 +161,18 @@ const onChangeCheckbox = async (check, _id) => {
       method: 'PATCH',
       headers,
       body: JSON.stringify({
-        isCheck: !check,
-        _id
+        isCheck: !check
       })
     });
     const result = await resp.json();
     tasks.forEach(element => {
       if (element._id === result._id) {
-        element.isCheck = !element.isCheck;
+        element.isCheck = result.isCheck;
       }
     })
     render();
   } catch (err) {
-    getError(err);
+    getError('something went wrong');
     throw err;
   }
 }
@@ -184,8 +184,7 @@ const editTask = async (id, text) => {
         method: 'PATCH',
         headers,
         body: JSON.stringify({
-          text,
-          _id: id
+          text
         })
       });
       const result = await resp.json();
@@ -197,14 +196,14 @@ const editTask = async (id, text) => {
       render();
     }
   } catch (err) {
-    getError(err);
+    getError('something went wrong');
     throw err;
   }
 }
 
 const deleteTask = async (id) => {
   try {
-    const resp = await fetch(`${url}/tasks/${id}/delete`, {
+    const resp = await fetch(`${url}/tasks/${id}`, {
       method: 'DELETE'
     });
     const result = await resp.json();
@@ -213,20 +212,20 @@ const deleteTask = async (id) => {
     }
     render();
   } catch (err) {
-    getError(err);
+    getError('something went wrong');
     throw err;
   }
 }
 
 const deleteAllTask = async () => {
   try {
-    const resp = await fetch(`${url}/tasks/deleteall`, {
+    const resp = await fetch(`${url}/tasks/clear`, {
       method: 'DELETE'
     });
     tasks = [];
     render();
   } catch (err) {
-    getError(err);
+    getError('something went wrong');
     throw err;
   }
 }
