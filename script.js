@@ -157,7 +157,7 @@ const addTask = async () => {
 
 const onChangeCheckbox = async (check, _id) => {
   try {
-    const resp = await fetch(`${url}/tasks/${_id}/complete`, {
+    const resp = await fetch(`${url}/tasks/${_id}/toggle`, {
       method: 'PATCH',
       headers,
       body: JSON.stringify({
@@ -180,7 +180,7 @@ const onChangeCheckbox = async (check, _id) => {
 const editTask = async (id, text) => {
   try {
     if (text) {
-      const resp = await fetch(`${url}/tasks/${id}/update`, {
+      const resp = await fetch(`${url}/tasks/${id}/text`, {
         method: 'PATCH',
         headers,
         body: JSON.stringify({
