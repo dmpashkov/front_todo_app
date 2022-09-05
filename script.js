@@ -5,11 +5,6 @@ const headers = {
 let tasks = [];
 
 window.onload = () => {
-  try {
-  } catch (err) {
-    getError('app load error');
-    throw err
-  }
   getAllTasks();
 }
 
@@ -23,7 +18,6 @@ const getAllTasks = async () => {
     render();
   } catch (err) {
     getError("Cannot connect to the server.");
-    throw err;
   }
 }
 
@@ -97,7 +91,8 @@ const creatEditInput = (_id, text) => {
   const editIcon = task.lastChild.previousSibling.lastChild;
   if (task === null
     || editBtn == null
-    || editIcon == null) {
+    || editIcon == null
+  ) {
     return;
   }
   if (!task.classList.contains('edit')) {
@@ -135,7 +130,7 @@ const addTask = async () => {
     const input = document.querySelector('.todo__input');
     let inputText = input.value;
     if (inputText.trim() === '') {
-      input.value = '';
+      getError('the field must not be empty');
       return;
     }
     const resp = await fetch(`${url}/tasks`, {
@@ -151,7 +146,6 @@ const addTask = async () => {
     render();
   } catch (err) {
     getError('something went wrong');
-    throw err;
   }
 }
 
@@ -173,31 +167,32 @@ const onChangeCheckbox = async (check, _id) => {
     render();
   } catch (err) {
     getError('something went wrong');
-    throw err;
   }
 }
 
 const editTask = async (id, text) => {
   try {
-    if (text) {
-      const resp = await fetch(`${url}/tasks/${id}/text`, {
-        method: 'PATCH',
-        headers,
-        body: JSON.stringify({
-          text
-        })
-      });
-      const result = await resp.json();
-      tasks.forEach(element => {
-        if (element._id === id) {
-          element.text = result.text;
-        }
-      })
-      render();
+    if (text.trim() === '') {
+      getError('the field must not be empty');
+      return;
     }
+
+    const resp = await fetch(`${url}/tasks/${id}/text`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify({
+        text: text.replace(/\s+/g, ' ').trim()
+      })
+    });
+    const result = await resp.json();
+    tasks.forEach(element => {
+      if (element._id === id) {
+        element.text = result.text;
+      }
+    })
+    render();
   } catch (err) {
     getError('something went wrong');
-    throw err;
   }
 }
 
@@ -213,19 +208,17 @@ const deleteTask = async (id) => {
     render();
   } catch (err) {
     getError('something went wrong');
-    throw err;
   }
 }
 
 const deleteAllTask = async () => {
   try {
-    const resp = await fetch(`${url}/tasks/clear`, {
+    const resp = await fetch(`${url}/tasks`, {
       method: 'DELETE'
     });
     tasks = [];
     render();
   } catch (err) {
     getError('something went wrong');
-    throw err;
   }
 }
