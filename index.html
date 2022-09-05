@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link type="image/x-icon" rel="shortcut icon" href="./icons/favicon.png">
+    <link rel="stylesheet" href="style.css">
+    <title>todo</title>
+  </head>
+  <body>
+    <section class="todo">
+      <div class="container">
+        <div class="todo__wrapper">
+          <div class="todo__container">
+            <h2 class="todo__title">Todo app</h2>
+            <input type="text" class="todo__input" placeholder="Введите задачу">
+            <div class="todo-btn__wrapper">
+              <button onclick="addTask()" class="todo-btn">Добавить</button>
+              <button onclick="deleteAllTask()" class="todo-btn todo-btn_del">Очистить</button>
+            </div>
+          </div>
+          <div class="todo__tasks"></div>
+          <p class="error"></p>
+        </div>
+      </div>
+    </section>
+    <script src="./script.js"></script>
+  </body>
+</html>
